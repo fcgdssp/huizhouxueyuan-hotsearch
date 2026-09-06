@@ -158,7 +158,7 @@
         <!-- 管理员管理 -->
         <h2>管理员</h2>
         <div class="card">
-            <div class="admin-row">
+            <div class="admin-row" id="addUserRow">
                 <input id="newUser" placeholder="新账号" />
                 <input id="newPass" type="password" placeholder="新密码" />
                 <button class="btn-primary" id="addUserBtn" type="button">添加管理员</button>
@@ -173,6 +173,7 @@
 
     <script>
     var token = localStorage.getItem('token') || '';
+    var myRole = localStorage.getItem('role') || 'normal'; // 当前账号角色：super=超级管理员 / normal=普通管理员
     var editingId = null; // 正在编辑的 id，null = 新增
     var allItems = [];     // 拉到的全部热搜（用于搜索/筛选）
 
@@ -197,6 +198,7 @@
         token = '';
         localStorage.removeItem('token');
         localStorage.removeItem('username');
+        localStorage.removeItem('role');
         showLogin();
         if (notify) alert('已退出登录');
     }
@@ -210,8 +212,10 @@
             .then(function (d) {
                 if (d.ok) {
                     token = d.token;
+                    myRole = d.role || 'normal';
                     localStorage.setItem('token', token);
                     localStorage.setItem('username', d.username);
+                    localStorage.setItem('role', myRole);
                     $('curUser').textContent = d.username;
                     $('loginErr').textContent = '';
                     $('loginUser').value = ''; $('loginPass').value = '';
@@ -358,12 +362,33 @@
     };
 
     // 管理员管理
+    function applyRoleUI() {
+        // 只有超级管理员能看到「添加管理员」那一行
+        $('addUserRow').style.display = (myRole === 'super') ? 'flex' : 'none';
+    }
+
     function renderUsers() {
         api('/api/users').then(function (r) { return r.json(); }).then(function (list) {
-            var html = list.map(function (u) { return '<div>' + u.username + ' <span class="tag">' + u.created_at + '</span></div>'; }).join('');
+            var html = list.map(function (u) {
+                var tag = (u.role === 'super') ? ' <span class="status done">超级管理员</span>' : '';
+                var delBtn = (myRole === 'super' && u.role !== 'super')
+                    ? '<button class="btn-danger" onclick="delUser(' + u.id + ')">删除</button>'
+                    : '';
+                return '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #f0f0f0;">' +
+                    '<span>' + u.username + tag + ' <span class="tag">' + u.created_at + '</span></span>' +
+                    delBtn +
+                    '</div>';
+            }).join('');
             $('usersList').innerHTML = html || '<div class="empty">暂无</div>';
         });
     }
+
+    window.delUser = function (id) {
+        if (!confirm('确定删除这个管理员？')) return;
+        api('/api/users/' + id, { method: 'DELETE' }).then(function (r) { return r.json(); }).then(function (d) {
+            if (d.ok) { renderUsers(); } else { alert(d.msg || '删除失败'); }
+        });
+    };
 
     $('addUserBtn').addEventListener('click', function () {
         var u = $('newUser').value.trim();
@@ -391,8 +416,14 @@
     // 初始化：有 token 就校验并进后台，否则进登录页
     if (token) {
         api('/api/me').then(function (r) { return r.json(); }).then(function (d) {
-            if (d.ok) { $('curUser').textContent = d.username; showAdmin(); loadAll(); }
-            else { logout(false); }
+            if (d.ok) {
+                myRole = d.role || 'normal';
+                localStorage.setItem('role', myRole);
+                $('curUser').textContent = d.username;
+                showAdmin();
+                applyRoleUI();
+                loadAll();
+            } else { logout(false); }
         }).catch(function () { showLogin(); });
     } else {
         showLogin();

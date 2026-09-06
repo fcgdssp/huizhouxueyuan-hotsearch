@@ -47,6 +47,7 @@ db.exec(`
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     username TEXT NOT NULL UNIQUE,
     password_hash TEXT NOT NULL,
+    role TEXT NOT NULL DEFAULT 'normal',
     created_at TEXT NOT NULL DEFAULT (datetime('now','localtime'))
   );
   CREATE TABLE IF NOT EXISTS sessions (
@@ -67,6 +68,11 @@ db.exec(`
   if (msgCols.indexOf('status') < 0) {
     db.exec('ALTER TABLE messages ADD COLUMN status INTEGER NOT NULL DEFAULT 0');
   }
+  const userCols = db.prepare('PRAGMA table_info(users)').all().map(function (c) { return c.name; });
+  if (userCols.indexOf('role') < 0) {
+    db.exec("ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT 'normal'");
+  }
+  db.exec("UPDATE users SET role='super' WHERE username='admin'"); // 确保 admin 永远是超级管理员
 })();
 
 
@@ -104,7 +110,7 @@ function verifyPassword(pw, stored) {
 
 // 首次运行：没有管理员时，建一个默认账号 admin / admin123
 if (db.prepare('SELECT COUNT(*) AS c FROM users').get().c === 0) {
-  db.prepare('INSERT INTO users (username, password_hash) VALUES (?, ?)').run('admin', hashPassword('admin123'));
+  db.prepare("INSERT INTO users (username, password_hash, role) VALUES (?, ?, 'super')").run('admin', hashPassword('admin123'));
   console.log('已创建默认管理员：admin / admin123（登录后请尽快改密码）');
 }
 
@@ -128,6 +134,14 @@ function requireAuth(req, res, next) {
   next();
 }
 
+// 超级管理员专属：只有 role='super' 才放行
+function requireSuper(req, res, next) {
+  if (!req.user || req.user.role !== 'super') {
+    return res.status(403).json({ ok: false, msg: '没有权限，只有超级管理员能操作' });
+  }
+  next();
+}
+
 // ---------- 接口（API） ----------
 
 // 登录（公开）：用户名+密码 → 校验 → 发一个 token（存进 sessions 表）
@@ -139,7 +153,7 @@ app.post('/api/login', (req, res) => {
   }
   const token = crypto.randomBytes(32).toString('hex');
   db.prepare('INSERT INTO sessions (token, user_id) VALUES (?, ?)').run(token, u.id);
-  res.json({ ok: true, token: token, username: u.username });
+  res.json({ ok: true, token: token, username: u.username, role: u.role });
 });
 
 // 登出（需登录）：删掉当前 token
@@ -151,16 +165,16 @@ app.post('/api/logout', requireAuth, (req, res) => {
 
 // 当前登录用户（需登录）
 app.get('/api/me', requireAuth, (req, res) => {
-  res.json({ ok: true, username: req.user.username });
+  res.json({ ok: true, username: req.user.username, role: req.user.role });
 });
 
 // 管理员列表（需登录）
 app.get('/api/users', requireAuth, (req, res) => {
-  res.json(db.prepare('SELECT id, username, created_at FROM users ORDER BY id').all());
+  res.json(db.prepare('SELECT id, username, role, created_at FROM users ORDER BY id').all());
 });
 
 // 添加管理员（需登录）
-app.post('/api/users', requireAuth, (req, res) => {
+app.post('/api/users', requireAuth, requireSuper, (req, res) => {
   const b = req.body || {};
   const uname = (b.username || '').trim();
   const pw = b.password || '';
@@ -177,6 +191,18 @@ app.put('/api/users/password', requireAuth, (req, res) => {
   const pw = (req.body || {}).password || '';
   if (!pw) return res.status(400).json({ ok: false, msg: '密码不能为空' });
   db.prepare('UPDATE users SET password_hash=? WHERE id=?').run(hashPassword(pw), req.user.id);
+  res.json({ ok: true });
+});
+
+// 删除管理员（需超级管理员）
+app.delete('/api/users/:id', requireAuth, requireSuper, (req, res) => {
+  const id = Number(req.params.id);
+  if (id === req.user.id) return res.status(400).json({ ok: false, msg: '不能删除自己' });
+  const target = db.prepare('SELECT * FROM users WHERE id=?').get(id);
+  if (!target) return res.status(404).json({ ok: false, msg: '账号不存在' });
+  if (target.role === 'super') return res.status(400).json({ ok: false, msg: '不能删除超级管理员' });
+  db.prepare('DELETE FROM users WHERE id=?').run(id);
+  db.prepare('DELETE FROM sessions WHERE user_id=?').run(id);
   res.json({ ok: true });
 });
 
