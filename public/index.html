@@ -412,6 +412,26 @@
             white-space: pre-wrap;
         }
 
+        /* 详情页文章排版（带 h3 小节标题 / p 段落 / closing 结尾的文章） */
+        .detail-content p {
+            margin: 0 0 14px;
+        }
+        .detail-content h3 {
+            font-size: 16px;
+            font-weight: 700;
+            color: #4a3a2e;
+            margin: 20px 0 8px;
+            line-height: 1.5;
+        }
+        .detail-content h3:first-child {
+            margin-top: 0;
+        }
+        .detail-content .closing {
+            color: #b85c3a;
+            font-weight: 500;
+            margin-top: 20px;
+        }
+
         /* 留言表单 */
         .msg-form {
             padding: 16px 20px;
