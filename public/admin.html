@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>惠院热搜 · 管理后台</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+            background: #f0f2f5;
+            color: #2a2a2a;
+            padding: 20px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        h1 { font-size: 22px; margin-bottom: 4px; color: #4a3a2e; }
+        .sub { color: #999; font-size: 13px; margin-bottom: 20px; }
+        h2 { font-size: 16px; margin: 24px 0 10px; color: #4a3a2e; border-left: 4px solid #b85c3a; padding-left: 8px; }
+        .card { background: #fff; border-radius: 12px; padding: 16px; box-shadow: 0 1px 4px rgba(0,0,0,.06); }
+        form { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        label { display: flex; flex-direction: column; font-size: 13px; color: #666; gap: 4px; }
+        label.full { grid-column: 1 / -1; }
+        input, select, textarea {
+            border: 1px solid #ddd; border-radius: 8px; padding: 8px 10px;
+            font-size: 14px; font-family: inherit; color: #2a2a2a;
+        }
+        textarea { resize: vertical; }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: #b85c3a; }
+        .btn-row { grid-column: 1 / -1; display: flex; gap: 10px; }
+        button {
+            border: none; border-radius: 8px; padding: 9px 16px; font-size: 14px;
+            cursor: pointer; font-weight: 600;
+        }
+        .btn-primary { background: #b85c3a; color: #fff; }
+        .btn-primary:hover { background: #a34f31; }
+        .btn-ghost { background: #eee; color: #555; }
+        .btn-danger { background: #f5e6e6; color: #c0392b; }
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #eee; vertical-align: top; }
+        th { color: #999; font-weight: 600; font-size: 13px; }
+        td .ops { display: flex; gap: 8px; flex-wrap: wrap; }
+        td .ops button { padding: 4px 10px; font-size: 13px; }
+        .clicks { color: #b85c3a; font-weight: 700; }
+        .tag { font-size: 12px; color: #999; }
+        .msg-item { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; padding: 10px 0; border-bottom: 1px solid #eee; }
+        .msg-item .meta { font-size: 12px; color: #999; margin-top: 4px; }
+        .empty { color: #bbb; padding: 10px 0; }
+        .toolbar { display: flex; gap: 10px; margin-bottom: 12px; }
+        .toolbar input { flex: 1; }
+        .toolbar select { min-width: 120px; }
+        .status { font-size: 12px; padding: 2px 8px; border-radius: 20px; }
+        .status.done { background: #e6f2e6; color: #2e7d32; }
+        .status.todo { background: #fdf0e6; color: #c0392b; }
+        .topline { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .topline .who { color: #666; font-size: 14px; }
+        .login-wrap { max-width: 360px; margin: 60px auto; }
+        .login-wrap h1 { text-align: center; margin-bottom: 16px; }
+        .login-box { display: flex; flex-direction: column; gap: 12px; }
+        .login-err { color: #c0392b; font-size: 13px; min-height: 18px; }
+        .admin-row { display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+        .admin-row input { flex: 1; min-width: 140px; }
+        .users-list { font-size: 14px; }
+        .users-list div { padding: 6px 0; border-bottom: 1px solid #f0f0f0; }
+    </style>
+</head>
+<body>
+    <!-- 登录页 -->
+    <div id="loginView" style="display:none;">
+        <div class="login-wrap">
+            <h1>惠院热搜 · 管理后台</h1>
+            <div class="card login-box">
+                <input id="loginUser" placeholder="账号" />
+                <input id="loginPass" type="password" placeholder="密码" />
+                <button class="btn-primary" id="loginBtn" type="button">登录</button>
+                <div class="login-err" id="loginErr"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 管理页（登录后显示） -->
+    <div id="adminView" style="display:none;">
+        <div class="topline">
+            <h1>惠院热搜 · 管理后台</h1>
+            <div class="who">已登录：<span id="curUser"></span>
+                <button class="btn-ghost" id="logoutBtn" type="button" style="margin-left:8px;">退出登录</button>
+            </div>
+        </div>
+        <div class="sub">在这里增删改热搜、排序、查看点击量和留言。改完主页面刷新即可看到。</div>
+
+        <!-- 热搜管理 -->
+        <h2>热搜管理</h2>
+        <div class="card">
+            <form id="itemForm">
+                <label>分类
+                    <select id="f_cat">
+                        <option>新生</option><option>学习</option><option>工作</option><option>生活</option>
+                    </select>
+                </label>
+                <label>标题
+                    <input id="f_title" placeholder="必填" />
+                </label>
+                <label>团办相关（进顶部「爆」聚合页）
+                    <select id="f_to"><option value="0">否</option><option value="1">是</option></select>
+                </label>
+                <label>爆/升标志
+                    <select id="f_mark"><option value="">无</option><option value="爆">爆</option><option value="升">升</option></select>
+                </label>
+                <label>小标签 badge
+                    <input id="f_badge" placeholder="如 热 / 新 / 官宣，可空" />
+                </label>
+                <label>badge 颜色
+                    <select id="f_badgeColor"><option value="">默认</option><option value="orange">橙</option><option value="blue">蓝</option></select>
+                </label>
+                <label>浏览量（显示用文字）
+                    <input id="f_views" placeholder="如 236000，可空" />
+                </label>
+                <label>meta 小字 label
+                    <input id="f_label" placeholder="一般可空" />
+                </label>
+                <label>label 颜色
+                    <select id="f_labelColor"><option value="">默认</option><option value="orange">橙</option><option value="blue">蓝</option></select>
+                </label>
+                <label>右上角文字 extra
+                    <input id="f_extra" placeholder="一般可空" />
+                </label>
+                <label class="full">外链 link（点词条新窗口打开，可空）
+                    <input id="f_link" placeholder="https://..." />
+                </label>
+                <label class="full">详情正文（换行用 &lt;br&gt;）
+                    <textarea id="f_detail" rows="3"></textarea>
+                </label>
+                <div class="btn-row">
+                    <button type="submit" class="btn-primary" id="saveBtn">新增</button>
+                    <button type="button" class="btn-ghost" id="cancelBtn" style="display:none;">取消编辑</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="card" style="margin-top:12px;">
+            <div class="toolbar">
+                <input id="searchBox" placeholder="搜索标题关键词…" />
+                <select id="filterCat">
+                    <option value="">全部分类</option>
+                    <option>新生</option><option>学习</option><option>工作</option><option>生活</option>
+                </select>
+            </div>
+            <table>
+                <thead><tr><th>ID</th><th>分类</th><th>标题</th><th>点击量</th><th>操作</th></tr></thead>
+                <tbody id="itemsBody"></tbody>
+            </table>
+        </div>
+
+        <!-- 留言管理 -->
+        <h2>留言 / 反馈</h2>
+        <div class="card" id="messagesBox"></div>
+
+        <!-- 管理员管理 -->
+        <h2>管理员</h2>
+        <div class="card">
+            <div class="admin-row">
+                <input id="newUser" placeholder="新账号" />
+                <input id="newPass" type="password" placeholder="新密码" />
+                <button class="btn-primary" id="addUserBtn" type="button">添加管理员</button>
+            </div>
+            <div class="admin-row">
+                <input id="newPwSelf" type="password" placeholder="修改我自己的密码" />
+                <button class="btn-ghost" id="changePwBtn" type="button">修改密码</button>
+            </div>
+            <div class="users-list" id="usersList"></div>
+        </div>
+    </div>
+
+    <script>
+    var token = localStorage.getItem('token') || '';
+    var editingId = null; // 正在编辑的 id，null = 新增
+    var allItems = [];     // 拉到的全部热搜（用于搜索/筛选）
+
+    function $(id) { return document.getElementById(id); }
+
+    function showLogin() { $('loginView').style.display = 'block'; $('adminView').style.display = 'none'; }
+    function showAdmin() { $('loginView').style.display = 'none'; $('adminView').style.display = 'block'; }
+
+    // 统一请求：自动带登录 token；401 就退回登录
+    function api(path, opts) {
+        opts = opts || {};
+        opts.headers = opts.headers || {};
+        if (token) opts.headers['Authorization'] = 'Bearer ' + token;
+        return fetch(path, opts).then(function (r) {
+            if (r.status === 401) { logout(false); throw new Error('未登录'); }
+            return r;
+        });
+    }
+
+    function logout(notify) {
+        if (token) { api('/api/logout', { method: 'POST' }).catch(function () {}); }
+        token = '';
+        localStorage.removeItem('token');
+        localStorage.removeItem('username');
+        showLogin();
+        if (notify) alert('已退出登录');
+    }
+
+    // 登录
+    $('loginBtn').addEventListener('click', function () {
+        var u = $('loginUser').value.trim();
+        var p = $('loginPass').value;
+        fetch('/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: u, password: p }) })
+            .then(function (r) { return r.json(); })
+            .then(function (d) {
+                if (d.ok) {
+                    token = d.token;
+                    localStorage.setItem('token', token);
+                    localStorage.setItem('username', d.username);
+                    $('curUser').textContent = d.username;
+                    $('loginErr').textContent = '';
+                    $('loginUser').value = ''; $('loginPass').value = '';
+                    showAdmin();
+                    loadAll();
+                } else {
+                    $('loginErr').textContent = d.msg || '登录失败';
+                }
+            })
+            .catch(function () { $('loginErr').textContent = '登录失败，请重试'; });
+    });
+    $('loginPass').addEventListener('keydown', function (e) { if (e.key === 'Enter') $('loginBtn').click(); });
+    $('logoutBtn').addEventListener('click', function () { logout(true); });
+
+    // 收集表单数据
+    function readForm() {
+        return {
+            cat: $('f_cat').value, title: $('f_title').value,
+            to: $('f_to').value === '1',
+            mark: $('f_mark').value, badge: $('f_badge').value,
+            badgeColor: $('f_badgeColor').value, views: $('f_views').value,
+            label: $('f_label').value, labelColor: $('f_labelColor').value,
+            extra: $('f_extra').value, link: $('f_link').value, detail: $('f_detail').value
+        };
+    }
+
+    function clearForm() {
+        editingId = null;
+        $('itemForm').reset();
+        $('saveBtn').textContent = '新增';
+        $('cancelBtn').style.display = 'none';
+    }
+
+    function fillForm(it) {
+        editingId = it.id;
+        $('f_cat').value = it.cat; $('f_title').value = it.title;
+        $('f_to').value = it.to ? '1' : '0'; $('f_mark').value = it.mark || '';
+        $('f_badge').value = it.badge || ''; $('f_badgeColor').value = it.badgeColor || '';
+        $('f_views').value = it.views || ''; $('f_label').value = it.label || '';
+        $('f_labelColor').value = it.labelColor || ''; $('f_extra').value = it.extra || '';
+        $('f_link').value = it.link || ''; $('f_detail').value = it.detail || '';
+        $('saveBtn').textContent = '保存修改';
+        $('cancelBtn').style.display = 'inline-block';
+        window.scrollTo(0, 0);
+    }
+
+    function filtered() {
+        var kw = $('searchBox').value.trim();
+        var cat = $('filterCat').value;
+        return allItems.filter(function (it) {
+            var okKw = !kw || it.title.indexOf(kw) >= 0;
+            var okCat = !cat || it.cat === cat;
+            return okKw && okCat;
+        });
+    }
+
+    function renderTable() {
+        var list = filtered();
+        var html = '';
+        list.forEach(function (it) {
+            var extra = [];
+            if (it.badge) extra.push('标:' + it.badge);
+            if (it.mark) extra.push(it.mark);
+            if (it.link) extra.push('外链');
+            html += '<tr>' +
+                '<td>' + it.id + '</td>' +
+                '<td>' + it.cat + '</td>' +
+                '<td>' + it.title + ' <span class="tag">' + (extra.join(' · ') || '') + '</span></td>' +
+                '<td class="clicks">' + (it.clicks || 0) + '</td>' +
+                '<td><div class="ops">' +
+                '<button class="btn-ghost" onclick="moveItem(' + it.id + ',\'top\')">置顶</button>' +
+                '<button class="btn-ghost" onclick="moveItem(' + it.id + ',\'up\')">上移</button>' +
+                '<button class="btn-ghost" onclick="moveItem(' + it.id + ',\'down\')">下移</button>' +
+                '<button class="btn-ghost" onclick="editItem(' + it.id + ')">编辑</button>' +
+                '<button class="btn-danger" onclick="delItem(' + it.id + ')">删除</button>' +
+                '</div></td>' +
+                '</tr>';
+        });
+        $('itemsBody').innerHTML = html || '<tr><td colspan="5" class="empty">暂无热搜</td></tr>';
+    }
+
+    function loadItems() {
+        api('/api/items').then(function (r) { return r.json(); }).then(function (items) {
+            allItems = items;
+            renderTable();
+        });
+    }
+
+    window.editItem = function (id) {
+        var it = allItems.find(function (x) { return x.id === id; });
+        if (it) fillForm(it);
+    };
+
+    window.delItem = function (id) {
+        if (!confirm('确定删除这条热搜？')) return;
+        api('/api/items/' + id, { method: 'DELETE' }).then(loadItems);
+    };
+
+    window.moveItem = function (id, dir) {
+        api('/api/items/' + id + '/move', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ dir: dir }) }).then(loadItems);
+    };
+
+    $('searchBox').addEventListener('input', renderTable);
+    $('filterCat').addEventListener('change', renderTable);
+
+    $('itemForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        var data = readForm();
+        if (!data.title.trim()) { alert('标题不能为空'); return; }
+        var url = editingId ? '/api/items/' + editingId : '/api/items';
+        var method = editingId ? 'PUT' : 'POST';
+        api(url, { method: method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
+            .then(function () { clearForm(); loadItems(); });
+    });
+
+    $('cancelBtn').addEventListener('click', clearForm);
+
+    // 留言
+    function renderMessages() {
+        api('/api/messages').then(function (r) { return r.json(); }).then(function (list) {
+            if (!list.length) { $('messagesBox').innerHTML = '<div class="empty">暂无留言</div>'; return; }
+            var unread = list.filter(function (m) { return !m.status; }).length;
+            var html = '<div style="margin-bottom:8px;color:#999;font-size:13px;">未处理 ' + unread + ' 条 / 共 ' + list.length + ' 条</div>';
+            list.forEach(function (m) {
+                var statusTag = m.status ? '<span class="status done">已处理</span>' : '<span class="status todo">未处理</span>';
+                var toggleText = m.status ? '标记未处理' : '标记已处理';
+                html += '<div class="msg-item">' +
+                    '<div><div>' + m.content + ' ' + statusTag + '</div>' +
+                    '<div class="meta">' + (m.name || '匿名') + ' · ' + m.created_at + '</div></div>' +
+                    '<div class="ops">' +
+                    '<button class="btn-ghost" onclick="toggleMsg(' + m.id + ')">' + toggleText + '</button>' +
+                    '<button class="btn-danger" onclick="delMsg(' + m.id + ')">删除</button>' +
+                    '</div>' +
+                    '</div>';
+            });
+            $('messagesBox').innerHTML = html;
+        });
+    }
+
+    window.toggleMsg = function (id) { api('/api/messages/' + id + '/toggle', { method: 'POST' }).then(renderMessages); };
+    window.delMsg = function (id) {
+        if (!confirm('删除这条留言？')) return;
+        api('/api/messages/' + id, { method: 'DELETE' }).then(renderMessages);
+    };
+
+    // 管理员管理
+    function renderUsers() {
+        api('/api/users').then(function (r) { return r.json(); }).then(function (list) {
+            var html = list.map(function (u) { return '<div>' + u.username + ' <span class="tag">' + u.created_at + '</span></div>'; }).join('');
+            $('usersList').innerHTML = html || '<div class="empty">暂无</div>';
+        });
+    }
+
+    $('addUserBtn').addEventListener('click', function () {
+        var u = $('newUser').value.trim();
+        var p = $('newPass').value;
+        if (!u || !p) { alert('账号和密码不能为空'); return; }
+        api('/api/users', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: u, password: p }) })
+            .then(function (r) { return r.json(); }).then(function (d) {
+                if (d.ok) { $('newUser').value = ''; $('newPass').value = ''; renderUsers(); alert('已添加管理员'); }
+                else alert(d.msg || '添加失败');
+            });
+    });
+
+    $('changePwBtn').addEventListener('click', function () {
+        var p = $('newPwSelf').value;
+        if (!p) { alert('请输入新密码'); return; }
+        api('/api/users/password', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: p }) })
+            .then(function (r) { return r.json(); }).then(function (d) {
+                if (d.ok) { $('newPwSelf').value = ''; alert('密码已修改'); }
+                else alert(d.msg || '修改失败');
+            });
+    });
+
+    function loadAll() { loadItems(); renderMessages(); renderUsers(); }
+
+    // 初始化：有 token 就校验并进后台，否则进登录页
+    if (token) {
+        api('/api/me').then(function (r) { return r.json(); }).then(function (d) {
+            if (d.ok) { $('curUser').textContent = d.username; showAdmin(); loadAll(); }
+            else { logout(false); }
+        }).catch(function () { showLogin(); });
+    } else {
+        showLogin();
+    }
+    </script>
+</body>
+</html>

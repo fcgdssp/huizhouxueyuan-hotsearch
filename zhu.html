@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>惠院热搜</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* 外部留白干净 */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+            background: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 16px;
+        }
+
+        /* ===== 手机卡片 ===== */
+        .phone {
+            width: 100%;
+            max-width: 400px;
+            border-radius: 40px;
+            overflow: hidden;
+            position: relative;
+            padding: 20px 0 28px 0;
+            box-shadow: 0 24px 70px rgba(0, 0, 0, 0.12), 0 10px 24px rgba(0, 0, 0, 0.05);
+
+            /* ===== 卡片背景：浅色方格图案 + 柔和光晕 ===== */
+            background-color: #fcf9f5;
+            background-image:
+                /* 光晕（极淡） */
+                radial-gradient(circle at 15% 25%, rgba(255, 220, 200, 0.20) 0%, transparent 55%),
+                radial-gradient(circle at 85% 70%, rgba(200, 220, 255, 0.15) 0%, transparent 50%),
+                /* 方格图案（主要装饰） */
+                repeating-linear-gradient(0deg, transparent 0px, transparent 28px, rgba(200, 190, 180, 0.15) 28px, rgba(200, 190, 180, 0.15) 29px),
+                repeating-linear-gradient(90deg, transparent 0px, transparent 28px, rgba(200, 190, 180, 0.15) 28px, rgba(200, 190, 180, 0.15) 29px);
+            background-blend-mode: normal, normal, normal, normal;
+            background-size: 100% 100%, 100% 100%, 29px 29px, 29px 29px;
+        }
+
+        /* ===== 顶部栏（带装饰背景） ===== */
+        .top-bar {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 6px 22px 14px 22px;
+            margin: 0 0 8px 0;
+            border-bottom: 2px dashed rgba(180, 170, 160, 0.25);
+            position: relative;
+            background: transparent;
+        }
+        /* 顶部装饰背景：极淡的波纹或斜线 */
+        .top-bar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(45deg,
+                transparent 0px,
+                transparent 10px,
+                rgba(200, 180, 170, 0.05) 10px,
+                rgba(200, 180, 170, 0.05) 11px,
+                transparent 11px,
+                transparent 20px
+            );
+            pointer-events: none;
+            border-radius: 40px 40px 0 0;
+            z-index: 0;
+        }
+
+        .top-bar .left,
+        .top-bar .right {
+            font-size: 16px;
+            font-weight: 500;
+            color: #666;
+            z-index: 1;
+            padding: 0 4px;
+        }
+        .top-bar .left { margin-right: auto; }
+        .top-bar .right { margin-left: auto; }
+
+        /* 顶栏左侧「爆」按钮：暖橙胶囊实心白字，可点击进团办聚合页 */
+        .burst-btn {
+            margin-right: auto;
+            z-index: 2;
+            height: 30px;
+            padding: 0 12px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            cursor: pointer;
+            font-weight: 800;
+            font-size: 14px;
+            line-height: 1;
+            color: #fff;
+            background-color: #b85c3a;
+            border-radius: 999px;
+            box-shadow: 0 2px 6px rgba(184, 92, 58, 0.28);
+            transition: transform 0.1s, box-shadow 0.2s;
+        }
+        .burst-btn:active {
+            transform: scale(0.9);
+            box-shadow: 0 1px 3px rgba(184, 92, 58, 0.25);
+        }
+
+        .top-bar .center {
+            font-size: 28px;
+            font-weight: 800;
+            letter-spacing: 3px;
+            z-index: 1;
+            /* 特殊字效：描边 + 阴影 */
+            color: #4a3a2e;
+            text-shadow:
+                2px 2px 0 rgba(255, 215, 175, 0.6),
+                4px 4px 8px rgba(0,0,0,0.08);
+            font-family: "Georgia", "Times New Roman", serif;
+            transform: scale(1.02);
+            padding: 0 16px;
+            position: relative;
+        }
+        /* 标题两侧装饰小星星 */
+        .top-bar .center::before {
+            content: '✦';
+            position: absolute;
+            left: -12px;
+            top: -2px;
+            font-size: 18px;
+            color: #c0a080;
+            opacity: 0.6;
+        }
+        .top-bar .center::after {
+            content: '✦';
+            position: absolute;
+            right: -12px;
+            top: -2px;
+            font-size: 18px;
+            color: #c0a080;
+            opacity: 0.6;
+        }
+
+        /* ===== 分类标签 ===== */
+        .tabs {
+            display: flex;
+            padding: 6px 22px 10px 22px;
+            gap: 18px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #777;
+            border-bottom: 1px solid rgba(180, 170, 160, 0.15);
+            flex-wrap: wrap;
+            background: transparent;
+            justify-content: center;
+        }
+        .tabs span {
+            cursor: pointer;
+            padding-bottom: 6px;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+            color: #777;
+        }
+        .tabs span.active {
+            color: #b85c3a;
+            border-bottom-color: #b85c3a;
+            font-weight: 600;
+        }
+
+        /* ===== 标语 ===== */
+        .slogan {
+            padding: 12px 22px 10px 22px;
+            font-size: 13px;
+            color: #aaa;
+            border-bottom: 1px solid rgba(180, 170, 160, 0.12);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: transparent;
+            justify-content: center;
+        }
+        .slogan .icon {
+            font-size: 15px;
+        }
+
+        /* ===== 热搜列表 ===== */
+        .hot-list {
+            padding: 6px 0 0 0;
+            background: transparent;
+        }
+
+        /* ===== 每条热搜（统一样式） ===== */
+        .hot-item {
+            display: flex;
+            align-items: stretch;
+            cursor: pointer;
+            padding: 12px 18px 12px 16px;
+            margin: 0 14px 8px 14px;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            border: 1px solid rgba(220, 210, 200, 0.35);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+            transition: background 0.15s, transform 0.1s, box-shadow 0.2s;
+            /* 统一左侧装饰：灰色细竖条 */
+            border-left: 4px solid #cbc1b5;
+            border-radius: 16px 16px 16px 16px;
+        }
+        .hot-item:active {
+            background: rgba(255, 255, 255, 0.96);
+            transform: scale(0.98);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+        }
+
+        .hot-index {
+            font-size: 16px;
+            font-weight: 700;
+            color: #b0a69a;
+            width: 30px;
+            flex-shrink: 0;
+            padding-top: 2px;
+            text-align: left;
+        }
+        .hot-index.top3 {
+            color: #b85c3a; /* 前三名用暖色突出，但不刺眼 */
+        }
+
+        .hot-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            padding-left: 6px;
+            min-width: 0;
+        }
+
+        .hot-title {
+            font-size: 15px;
+            font-weight: 500;
+            color: #2a2a2a;
+            line-height: 1.4;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* 条目最右端的「爆 / 上升」标志容器（垂直居中） */
+        .hot-mark {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 8px;
+            align-self: center;
+        }
+        .hot-mark .mark {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            line-height: 1;
+        }
+        .hot-mark .mark.burst {
+            font-size: 12px;
+            color: #fff;
+            background-color: #b85c3a;
+            border-radius: 999px;
+            padding: 3px 8px;
+            box-shadow: 0 1px 3px rgba(184, 92, 58, 0.25);
+        }
+        .hot-mark .mark.rise {
+            font-size: 10px;
+            color: #b85c3a;
+            background: #fff;
+            border: 1px solid #b85c3a;
+            border-radius: 4px;
+            padding: 3px 5px;
+            letter-spacing: 0;
+        }
+
+        /* 标签统一风格 */
+        .hot-title .badge {
+            font-size: 11px;
+            font-weight: 600;
+            padding: 0 10px;
+            border-radius: 30px;
+            line-height: 20px;
+            white-space: nowrap;
+            background: rgba(210, 195, 185, 0.25);
+            color: #8a7a6e;
+            border: 1px solid rgba(180, 165, 155, 0.15);
+        }
+        .hot-title .badge.orange {
+            background: rgba(235, 200, 170, 0.25);
+            color: #b87a4a;
+        }
+        .hot-title .badge.blue {
+            background: rgba(190, 210, 235, 0.30);
+            color: #4a6a8a;
+        }
+
+        .hot-meta {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 12px;
+            color: #b5aba0;
+            margin-top: 1px;
+        }
+        .hot-meta .label {
+            color: #b85c3a;
+            font-weight: 500;
+        }
+        .hot-meta .label.orange { color: #b87a4a; }
+        .hot-meta .label.blue { color: #4a6a8a; }
+        .hot-meta .views { color: #c5bbb0; }
+
+        .hot-extra {
+            flex-shrink: 0;
+            font-size: 12px;
+            color: #c5bbb0;
+            padding-top: 2px;
+            text-align: right;
+            margin-left: 6px;
+        }
+
+        .footer-placeholder {
+            height: 8px;
+        }
+
+        /* ===== 滑入视图通用（详情页 / 团办聚合页共用） ===== */
+        .overlay-page {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            padding: 20px 0 28px 0;
+            background-color: #fcf9f5;
+            background-image:
+                radial-gradient(circle at 15% 25%, rgba(255, 220, 200, 0.20) 0%, transparent 55%),
+                radial-gradient(circle at 85% 70%, rgba(200, 220, 255, 0.15) 0%, transparent 50%),
+                repeating-linear-gradient(0deg, transparent 0px, transparent 28px, rgba(200, 190, 180, 0.15) 28px, rgba(200, 190, 180, 0.15) 29px),
+                repeating-linear-gradient(90deg, transparent 0px, transparent 28px, rgba(200, 190, 180, 0.15) 28px, rgba(200, 190, 180, 0.15) 29px);
+            transform: translateX(100%);
+            transition: transform 0.28s ease;
+            z-index: 10;
+            overflow-y: auto;
+        }
+        .overlay-page.open {
+            transform: translateX(0);
+        }
+        .overlay-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 4px 20px 14px 20px;
+            margin: 0 0 8px 0;
+            border-bottom: 2px dashed rgba(180, 170, 160, 0.25);
+        }
+        .back-btn {
+            flex-shrink: 0;
+            border: none;
+            background: rgba(200, 180, 170, 0.22);
+            color: #4a3a2e;
+            font-size: 14px;
+            font-weight: 600;
+            padding: 6px 14px;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+        .back-btn:active {
+            background: rgba(200, 180, 170, 0.4);
+        }
+        .overlay-title {
+            flex: 1;
+            text-align: center;
+            font-size: 17px;
+            font-weight: 700;
+            color: #2a2a2a;
+            line-height: 1.4;
+        }
+        .overlay-spacer {
+            flex-shrink: 0;
+            width: 64px;
+        }
+        .overlay-body {
+            padding: 6px 0 0 0;
+        }
+
+        /* 详情正文区 */
+        .detail-content {
+            padding: 16px 20px;
+            font-size: 15px;
+            line-height: 1.8;
+            color: #3a3a3a;
+            white-space: pre-wrap;
+        }
+
+        /* 聚合页里热搜序号颜色沿用 .hot-index；团办聚合的标题「团办」语气不变 */
+        .burst-list .hot-item:first-child {
+            margin-top: 0;
+        }
+
+        /* ===== 烟花画布（全屏透明，不挡点击） ===== */
+        #fireworksCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        /* 响应式 */
+        @media (max-width: 420px) {
+            .top-bar .center {
+                font-size: 24px;
+                letter-spacing: 2px;
+            }
+            .tabs {
+                gap: 12px;
+                font-size: 13px;
+            }
+            .hot-item {
+                padding: 10px 14px 10px 12px;
+                margin: 0 8px 6px 8px;
+            }
+            .hot-title {
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 烟花画布（全屏透明，覆盖在卡片之上、但不拦截点击） -->
+    <canvas id="fireworksCanvas"></canvas>
+
+    <div class="phone">
+        <!-- 顶部栏：左「爆」按钮 → 团办聚合；中「惠院热搜」；右「我的」 -->
+        <div class="top-bar">
+            <button class="burst-btn" id="burstBtn" type="button" title="团委办公室相关热搜">爆</button>
+            <span class="center">惠院热搜</span>
+            <span class="right">我的</span>
+        </div>
+
+        <!-- 分类标签（由 JS 渲染） -->
+        <div class="tabs" id="tabs"></div>
+
+        <!-- 标语 -->
+        <div class="slogan">
+            <span class="icon">📡</span> 热搜雷达，发现你关心的热点
+        </div>
+
+        <!-- 热搜列表（由 JS 渲染） -->
+        <div class="hot-list" id="hotList"></div>
+
+        <div class="footer-placeholder"></div>
+
+        <!-- 团办聚合页（点顶部「爆」滑入，列出所有团办相关热搜） -->
+        <div class="overlay-page" id="burstPage">
+            <div class="overlay-header">
+                <button class="back-btn" id="burstBackBtn" type="button">← 返回</button>
+                <div class="overlay-title">团委办公室</div>
+                <div class="overlay-spacer"></div>
+            </div>
+            <div class="overlay-body">
+                <div class="hot-list burst-list" id="burstList"></div>
+            </div>
+        </div>
+
+        <!-- 详情视图（点词条后从右侧滑入） -->
+        <div class="overlay-page" id="detailPage">
+            <div class="overlay-header">
+                <button class="back-btn" id="backBtn" type="button">← 返回</button>
+                <div class="overlay-title" id="detailTitle"></div>
+                <div class="overlay-spacer"></div>
+            </div>
+            <div class="overlay-body">
+                <div class="detail-content" id="detailBody"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    (function () {
+        /* ============================================================
+         * 数据区：改词条 / 分类，只需改下面两个数组。
+         * 每个词条字段含义：
+         *   cat        所属分类（必须是 CATEGORIES 之一：新生/学习/工作/生活）
+         *   title      标题
+         *   to         true=这条是团委办公室相关（会自动进顶部「爆」聚合页）
+         *   mark       '' 无 / '爆' 多角形红底黄字 / '升' 描边方框红字上升（显示在标题前）
+         *   badge      标题后小标签文字（如 热/新/官宣），没有写 ''
+         *   badgeColor 小标签颜色：''/orange/blue
+         *   views      浏览量（纯文字），'' 则不显示
+         *   label      meta 行左侧文字（如 热/新），没有写 ''
+         *   labelColor ''/orange/blue
+         *   extra      右上角角落文字，没有写 ''
+         *   detail     详情正文（要换行用 <br>）
+         *   link       外部跳转链接（如微信推文），没有就省略；有 link 时点词条会新窗口打开该链接
+         * ============================================================ */
+        var CATEGORIES = ['新生', '学习', '工作', '生活'];
+
+        var HOT_ITEMS = [
+            /* ========== 新生（团办 2 条：②⑤） ========== */
+            { id: 101, cat: '新生', title: '计科院新生报到流程全攻略', to: false, mark: '', badge: '热', badgeColor: '', views: '236000', label: '', labelColor: '', extra: '', detail: '【占位】计科院新生报到流程全攻略 —— 报到时间、地点、需要带的材料等，正文待补充。<br><br>（真实内容由你后续填写）' },
+            { id: 102, cat: '新生', title: '【团办】团委办公室迎新志愿服务招募中', to: true, mark: '', badge: '新', badgeColor: '', views: '', label: '', labelColor: '', extra: '', detail: '【占位】团委办公室迎新志愿服务招募 —— 报名方式、服务时间等正文待补充。<br><br>（真实内容由你后续填写）' },
+            { id: 103, cat: '新生', title: '军训物品清单来了（防晒/鞋垫）', to: false, mark: '升', badge: '', badgeColor: '', views: '183200', label: '', labelColor: '', extra: '', detail: '【占位】军训物品清单 —— 防晒霜、鞋垫、水壶等必备物清单，正文待补充。<br><br>（真实内容由你后续填写）' },
+            { id: 104, cat: '新生', title: '新生宿舍入住前要知道的事', to: false, mark: '', badge: '', badgeColor: '', views: '98200', label: '', labelColor: '', extra: '', detail: '【占位】新生宿舍入住前要知道的事 —— 寝室分配、入住流程、注意事项，正文待补充。<br><br>（真实内容由你后续填写）' },
+            { id: 105, cat: '新生', title: '【团办】新生有问题？团委办公室答疑时间到', to: true, mark: '', badge: '', badgeColor: '', views: '', label: '', labelColor: '', extra: '', detail: '【占位】新生有疑问可到团委办公室答疑 —— 时间、地点、联系方式，正文待补充。<br><br>（真实内容由你后续填写）' },
+            { id: 106, cat: '新生', title: '校园一卡通/门禁卡怎么用', to: false, mark: '', badge: '', badgeColor: '', views: '73200', label: '', labelColor: '', extra: '', detail: '【占位】校园一卡通 / 门禁卡使用指南 —— 充值、挂失、门禁开放时间等，正文待补充。<br><br>（真实内容由你后续填写）' },
+
+            /* ========== 学习（团办 2 条：②⑤） ========== */
+            { id: 201, cat: '学习', title: '计科萌新第一课：编程从哪学起', to: false, mark: '', badge: '', badgeColor: '', views: '126800', label: '', labelColor: '', extra: '', detail: '【占位】计科萌新第一课：编程入门路线 —— 语言选择、学习资源、练手项目，正文待补充。<br><br>（真实内容由你后续填写）' },
+            { id: 202, cat: '学习', title: '【团办】团委办公室学习帮扶计划报名', to: true, mark: '', badge: '新', badgeColor: '', views: '', label: '', labelColor: '', extra: '', detail: '【占位】团委办公室学习帮扶计划 —— 帮扶科目、报名方式、时间安排，正文待补充。<br><br>（真实内容由你后续填写）' },
+            { id: 203, cat: '学习', title: '惠院图书馆自习攻略（座位/开放时间）', to: false, mark: '', badge: '新', badgeColor: '', views: '88700', label: '', labelColor: '', extra: '', detail: '【占位】惠院图书馆自习攻略 —— 座位预约、开放时间、安静楼层分布，正文待补充。<br><br>（真实内容由你后续填写）' },
+            { id: 204, cat: '学习', title: '计科值得关注的竞赛与证书', to: false, mark: '', badge: '', badgeColor: '', views: '65900', label: '', labelColor: '', extra: '', link: 'https://mp.weixin.qq.com/s/1EBUmGTG3knNBVJ7N08qbQ', detail: '【占位】计科值得关注的竞赛与证书 —— 蓝桥杯、ACM、软考等介绍，正文待补充。<br><br>（真实内容由你后续填写）' },
+            { id: 205, cat: '学习', title: '【团办】团办学长整理的课程/复习资料', to: true, mark: '', badge: '', badgeColor: '', views: '', label: '', labelColor: '', extra: '', detail: '【占位】团办学长整理的课程 / 复习资料 —— 资料获取方式、覆盖科目，正文待补充。<br><br>（真实内容由你后续填写）' },
+            { id: 206, cat: '学习', title: '四六级/考研要不要现在开始', to: false, mark: '', badge: '', badgeColor: '', views: '54100', label: '', labelColor: '', extra: '', detail: '【占位】四六级 / 考研准备时间线 —— 什么时间开始、怎么规划，正文待补充。<br><br>（真实内容由你后续填写）' },
+
+            /* ========== 工作（团办 2 条：①②，团办招新主阵地） ========== */
+            { id: 301, cat: '工作', title: '【团办】院团委办公室招新开始啦', to: true, mark: '爆', badge: '热', badgeColor: '', views: '412000', label: '', labelColor: '', extra: '', detail: '【占位】院团委办公室招新开始啦 —— 招新时间、面向对象、报名方式、咨询群，正文待补充。<br><br>（真实内容由你后续填写）' },
+            { id: 302, cat: '工作', title: '【团办】团委办公室部门介绍一览', to: true, mark: '', badge: '', badgeColor: '', views: '', label: '', labelColor: '', extra: '', detail: '【占位】团委办公室部门介绍 —— 各部门职责、日常工作、能收获什么，正文待补充。<br><br>（真实内容由你后续填写）' },
+            { id: 303, cat: '工作', title: '学生会/团委/社团怎么选', to: false, mark: '', badge: '热', badgeColor: '', views: '197500', label: '', labelColor: '', extra: '', detail: '【占位】学生会 / 团委 / 社团怎么选 —— 不同组织的区别与取舍建议，正文待补充。<br><br>（真实内容由你后续填写）' },
+            { id: 304, cat: '工作', title: '大一当班干部/学生干部值不值', to: false, mark: '', badge: '', badgeColor: '', views: '121000', label: '', labelColor: '', extra: '', detail: '【占位】大一当班干部 / 学生干部值不值 —— 时间投入、锻炼价值分析，正文待补充。<br><br>（真实内容由你后续填写）' },
+            { id: 305, cat: '工作', title: '大学里的学生工作到底在忙什么', to: false, mark: '', badge: '', badgeColor: '', views: '87600', label: '', labelColor: '', extra: '', detail: '【占位】大学里的学生工作到底在忙什么 —— 日常事务、活动组织，正文待补充。<br><br>（真实内容由你后续填写）' },
+            { id: 306, cat: '工作', title: '从学生干部到求职：简历怎么攒', to: false, mark: '', badge: '', badgeColor: '', views: '64300', label: '', labelColor: '', extra: '', detail: '【占位】从学生干部到求职：简历怎么攒 —— 学生工作经历如何写进简历，正文待补充。<br><br>（真实内容由你后续填写）' },
+
+            /* ========== 生活（团办 2 条：③⑥） ========== */
+            { id: 401, cat: '生活', title: '惠州学院周边美食地图', to: false, mark: '', badge: '', badgeColor: '', views: '320000', label: '', labelColor: '', extra: '', detail: '【占位】惠州学院周边美食地图 —— 学校周边值得吃的地方整理，正文待补充。<br><br>（真实内容由你后续填写）' },
+            { id: 402, cat: '生活', title: '学校饭堂哪几道值得吃', to: false, mark: '', badge: '', badgeColor: '', views: '156000', label: '', labelColor: '', extra: '', detail: '【占位】学校饭堂哪几道值得吃 —— 各饭堂招牌菜分享，正文待补充。<br><br>（真实内容由你后续填写）' },
+            { id: 403, cat: '生活', title: '【团办】有问题找团办：校园生活反馈通道', to: true, mark: '', badge: '', badgeColor: '', views: '', label: '', labelColor: '', extra: '', detail: '【占位】有问题找团办 —— 校园生活反馈方式与渠道，正文待补充。<br><br>（真实内容由你后续填写）' },
+            { id: 404, cat: '生活', title: '宿舍必备好物清单', to: false, mark: '', badge: '', badgeColor: '', views: '113000', label: '', labelColor: '', extra: '', detail: '【占位】宿舍必备好物清单 —— 收纳、照明、床上用品推荐，正文待补充。<br><br>（真实内容由你后续填写）' },
+            { id: 405, cat: '生活', title: '惠院周边奶茶/咖啡馆盘点', to: false, mark: '', badge: '', badgeColor: '', views: '98200', label: '', labelColor: '', extra: '', detail: '【占位】惠院周边奶茶 / 咖啡馆盘点 —— 店铺、招牌、价格区间，正文待补充。<br><br>（真实内容由你后续填写）' },
+            { id: 406, cat: '生活', title: '【团办】团委办公室周末带你逛惠州', to: true, mark: '', badge: '', badgeColor: '', views: '', label: '', labelColor: '', extra: '', detail: '【占位】团委办公室周末带你逛惠州 —— 活动时间、报名方式，正文待补充。<br><br>（真实内容由你后续填写）' }
+        ];
+
+        /* ============================================================
+         * 渲染与交互逻辑（一般不用改）
+         * ============================================================ */
+        var listEl = document.getElementById('hotList');
+        var tabsEl = document.getElementById('tabs');
+        var burstBtn = document.getElementById('burstBtn');
+        var burstPage = document.getElementById('burstPage');
+        var burstList = document.getElementById('burstList');
+        var burstBackBtn = document.getElementById('burstBackBtn');
+        var detailPage = document.getElementById('detailPage');
+        var detailTitle = document.getElementById('detailTitle');
+        var detailBody = document.getElementById('detailBody');
+        var backBtn = document.getElementById('backBtn');
+
+        var activeCat = CATEGORIES[0];
+        /* 当前所处的视图：'home' 主页列表 / 'burst' 团办聚合页 / 'detail' 详情页
+           记录来源，保证详情页返回能回到「从哪进的」 */
+        var viewStack = ['home'];
+
+        function esc(s) {
+            return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+
+        function renderTabs() {
+            tabsEl.innerHTML = CATEGORIES.map(function (c) {
+                return '<span' + (c === activeCat ? ' class="active"' : '') + ' data-cat="' + esc(c) + '">' + esc(c) + '</span>';
+            }).join('');
+        }
+
+        function markHTML(mark) {
+            if (mark === '爆') { return '<div class="hot-mark"><span class="mark burst">爆</span></div>'; }
+            if (mark === '升') { return '<div class="hot-mark"><span class="mark rise">上升</span></div>'; }
+            return '';
+        }
+
+        function itemHTML(item, index) {
+            var idx = index + 1;
+            var top3 = idx <= 3 ? ' top3' : '';
+
+            var mark = markHTML(item.mark);
+            var badge = item.badge
+                ? '<span class="badge' + (item.badgeColor ? ' ' + item.badgeColor : '') + '">' + esc(item.badge) + '</span>'
+                : '';
+
+            var metaParts = [];
+            if (item.label) {
+                metaParts.push('<span class="label' + (item.labelColor ? ' ' + item.labelColor : '') + '">' + esc(item.label) + '</span>');
+            }
+            if (item.views) {
+                metaParts.push('<span class="views">' + esc(item.views) + '</span>');
+            }
+            var meta = metaParts.length ? '<div class="hot-meta">' + metaParts.join('') + '</div>' : '';
+
+            var extra = '<div class="hot-extra">' + (item.extra ? esc(item.extra) : '') + '</div>';
+
+            return '      <div class="hot-item" data-id="' + item.id + '">' +
+                '        <span class="hot-index' + top3 + '">' + idx + '</span>' +
+                '        <div class="hot-content">' +
+                '          <div class="hot-title">' + esc(item.title) + badge + '</div>' +
+                meta +
+                '        </div>' +
+                extra +
+                mark +
+                '      </div>';
+        }
+
+        function renderList() {
+            var items = HOT_ITEMS.filter(function (i) { return i.cat === activeCat; });
+            listEl.innerHTML = items.map(itemHTML).join('');
+        }
+
+        function renderBurstList() {
+            var items = HOT_ITEMS.filter(function (i) { return i.to === true; });
+            burstList.innerHTML = items.map(itemHTML).join('');
+        }
+
+        function openDetail(id) {
+            var it = null;
+            for (var i = 0; i < HOT_ITEMS.length; i++) {
+                if (HOT_ITEMS[i].id === id) { it = HOT_ITEMS[i]; break; }
+            }
+            if (!it) return;
+            // 有外部链接（如微信推文）时，直接新窗口打开，不进站内详情页
+            if (it.link) {
+                window.open(it.link, '_blank');
+                return;
+            }
+            detailTitle.textContent = it.title;
+            detailBody.innerHTML = it.detail || '（详情正文待填写）';
+            detailPage.classList.add('open');
+            viewStack.push('detail');
+        }
+
+        function openBurst() {
+            renderBurstList();
+            burstPage.classList.add('open');
+            viewStack.push('burst');
+        }
+
+        // 顶栏「爆」按钮：进入团办聚合页
+        burstBtn.addEventListener('click', openBurst);
+
+        // 分类标签点击：切换列表
+        tabsEl.addEventListener('click', function (e) {
+            var span = e.target.closest('span[data-cat]');
+            if (!span) return;
+            activeCat = span.getAttribute('data-cat');
+            renderTabs();
+            renderList();
+        });
+
+        // 主页列表点词条 → 详情
+        listEl.addEventListener('click', function (e) {
+            var item = e.target.closest('.hot-item');
+            if (!item) return;
+            openDetail(Number(item.getAttribute('data-id')));
+        });
+
+        // 团办聚合页点词条 → 详情
+        burstList.addEventListener('click', function (e) {
+            var item = e.target.closest('.hot-item');
+            if (!item) return;
+            openDetail(Number(item.getAttribute('data-id')));
+        });
+
+        // 详情返回：回到来源视图（主页 或 聚合页）
+        backBtn.addEventListener('click', function () {
+            detailPage.classList.remove('open');
+            if (viewStack.length) viewStack.pop();
+            /* 弹出的这一层是 detail；下面一层如果是 burst 则保持聚合页开着，否则已回主页 */
+        });
+
+        // 聚合页返回：回主页
+        burstBackBtn.addEventListener('click', function () {
+            burstPage.classList.remove('open');
+            if (viewStack.length) viewStack.pop();
+        });
+
+        // 初始化
+        renderTabs();
+        renderList();
+    })();
+
+    /* ============================================================
+     * 烟花特效：仅首页、点非跳转区域触发，暖色系、每次随机、动态
+     * 效果 = 画布渐隐光尾 + 普通绘制暖色轨迹 + 高速炸开 + 中心白火星 + 余烬
+     * ============================================================ */
+    (function () {
+        var canvas = document.getElementById('fireworksCanvas');
+        var ctx = canvas.getContext('2d');
+        var dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+        function resize() {
+            canvas.width = Math.floor(window.innerWidth * dpr);
+            canvas.height = Math.floor(window.innerHeight * dpr);
+            canvas.style.width = window.innerWidth + 'px';
+            canvas.style.height = window.innerHeight + 'px';
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        }
+        resize();
+        window.addEventListener('resize', resize);
+
+        // 暖色板：金 / 橙 / 橙红 / 砖红 / 粉 / 米白
+        var PALETTE = ['#ffd166', '#ff9f43', '#ff6b4a', '#e2453c', '#ffb3c1', '#fff3d6'];
+
+        // 预渲染发光贴图（颜色 → 软光斑）：径向渐变 solid 中心 → 同色透明边缘，无硬边、无暗边
+        var glow = {};
+        (function makeGlow() {
+            var S = 64, half = S / 2;
+            function hexToRgba(hex, a) {
+                var h = hex.replace('#', '');
+                if (h.length === 3) { h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2]; }
+                var r = parseInt(h.slice(0, 2), 16);
+                var g = parseInt(h.slice(2, 4), 16);
+                var b = parseInt(h.slice(4, 6), 16);
+                return 'rgba(' + r + ',' + g + ',' + b + ',' + a + ')';
+            }
+            function sprite(color) {
+                var c = document.createElement('canvas');
+                c.width = c.height = S;
+                var g = c.getContext('2d');
+                var grad = g.createRadialGradient(half, half, 0, half, half, half);
+                grad.addColorStop(0, color);
+                grad.addColorStop(0.25, color);
+                grad.addColorStop(1, hexToRgba(color, 0)); // 同色透明，避免边缘发暗
+                g.fillStyle = grad;
+                g.fillRect(0, 0, S, S);
+                return c;
+            }
+            PALETTE.forEach(function (c) { glow[c] = sprite(c); });
+            glow['#fff6e8'] = sprite('#fff6e8'); // 中心白火星用暖白
+        })();
+
+        var particles = [];
+        var running = false;
+        var last = 0;
+        var time = 0;        // 全局时间，供余烬闪烁
+        var fadeFrames = 0;  // 粒子耗尽后继续渐隐的帧数
+
+        function rand(a, b) { return a + Math.random() * (b - a); }
+        function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+        function spawnFirework(x, y) {
+            // 本束颜色：从暖色板随机抽几种
+            var colorCount = Math.floor(rand(1, 5)); // 每束几种颜色，1=单色
+            var colors = [];
+            while (colors.length < colorCount) {
+                var c = pick(PALETTE);
+                if (colors.indexOf(c) < 0) colors.push(c);
+            }
+
+            // 1) 主火花（决定大小与密度）
+            var count = Math.floor(rand(55, 85)); // 火花颗数，越多越密
+            for (var k = 0; k < count; k++) {
+                var angle = Math.random() * Math.PI * 2;
+                var speed = rand(3, 6);   // 初速度，越大整朵烟花越大
+                var life = rand(0.8, 1.4); // 存活秒数，越大越久
+                particles.push({
+                    kind: 'spark',
+                    x: x, y: y,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    life: life, maxLife: life,
+                    size: rand(1.2, 2),   // 火花粗细，越大越粗
+                    color: pick(colors),
+                    drag: rand(0.94, 0.97), // 减速，越小越快停（炸开范围越小）
+                    gravity: rand(0.02, 0.05) // 重力，越大下落越快
+                });
+            }
+
+            // 2) 中心白火星（爆炸瞬间闪一下）
+            var coreCount = Math.floor(rand(12, 18)); // 颗数
+            for (var c = 0; c < coreCount; c++) {
+                var ca = Math.random() * Math.PI * 2;
+                var cs = rand(0.3, 1.5);
+                var cLife = rand(0.25, 0.55); // 存活秒数，越大闪得越久
+                particles.push({
+                    kind: 'spark',
+                    x: x, y: y,
+                    vx: Math.cos(ca) * cs,
+                    vy: Math.sin(ca) * cs,
+                    life: cLife, maxLife: cLife,
+                    size: rand(1, 1.8),
+                    color: '#fff6e8',
+                    drag: 0.95,
+                    gravity: 0.01
+                });
+            }
+
+            // 3) 余烬（长寿命、轻微闪烁）
+            var emberCount = Math.floor(rand(6, 12)); // 颗数
+            for (var j = 0; j < emberCount; j++) {
+                var a2 = Math.random() * Math.PI * 2;
+                var s2 = rand(0.5, 2);
+                var eLife = rand(1.2, 2.0);
+                particles.push({
+                    kind: 'ember',
+                    x: x, y: y,
+                    vx: Math.cos(a2) * s2,
+                    vy: Math.sin(a2) * s2,
+                    life: eLife, maxLife: eLife,
+                    size: rand(1, 2),
+                    color: pick(colors),
+                    drag: 0.97,
+                    gravity: 0.015,
+                    phase: rand(0, Math.PI * 2),
+                    freq: rand(6, 12) // 闪烁快慢，越大越快
+                });
+            }
+
+            // 粒子总数上限，防卡顿
+            if (particles.length > 600) {
+                particles.splice(0, particles.length - 600);
+            }
+            if (!running) {
+                running = true;
+                last = 0;
+                requestAnimationFrame(tick);
+            }
+        }
+
+        function tick(ts) {
+            var dt = last ? Math.min((ts - last) / 1000, 0.05) : 1 / 60;
+            last = ts;
+            time += dt;
+
+            // 画布渐隐（关键）：旧画面缓缓淡出，火花留下发光轨迹尾巴
+            ctx.globalCompositeOperation = 'destination-out';
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.07)';   // 光尾长短，越小越长
+            ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
+
+            // 普通绘制，画当前粒子（轨迹保留暖色，不累加发白）
+            ctx.globalCompositeOperation = 'source-over';
+
+            var alive = [];
+            for (var i = 0; i < particles.length; i++) {
+                var p = particles[i];
+                p.life -= dt;
+                if (p.life <= 0) continue;
+
+                // 运动更新（受重力 + 阻尼）
+                p.vy += p.gravity;
+                p.vx *= p.drag || 1;
+                p.vy *= p.drag || 1;
+                p.x += p.vx;
+                p.y += p.vy;
+
+                var frac = Math.max(0, Math.min(1, p.life / p.maxLife));
+                var spr, R;
+
+                if (p.kind === 'spark') {
+                    // 火花：软光斑贴图，细核心 + 平滑淡出（无硬边、无暗边）
+                    spr = glow[p.color] || glow[PALETTE[0]];
+                    R = p.size * 3; // 光斑大小，越大越糊
+                    ctx.globalAlpha = frac;
+                    ctx.drawImage(spr, p.x - R, p.y - R, R * 2, R * 2);
+                } else if (p.kind === 'ember') {
+                    // 余烬：软光斑 + 轻微闪烁
+                    var tw = 0.55 + 0.45 * Math.sin(time * p.freq + p.phase);
+                    spr = glow[p.color] || glow[PALETTE[0]];
+                    R = p.size * 3;
+                    ctx.globalAlpha = frac * tw;
+                    ctx.drawImage(spr, p.x - R, p.y - R, R * 2, R * 2);
+                }
+                alive.push(p);
+            }
+
+            ctx.globalAlpha = 1;
+            ctx.globalCompositeOperation = 'source-over';
+            particles = alive;
+
+            if (particles.length) {
+                fadeFrames = 70;
+                requestAnimationFrame(tick);
+            } else if (fadeFrames > 0) {
+                // 粒子耗尽后继续渐隐几帧，让残影自然淡尽
+                fadeFrames--;
+                requestAnimationFrame(tick);
+            } else {
+                ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+                running = false;
+                last = 0;
+            }
+        }
+
+        document.addEventListener('pointerdown', function (e) {
+            // 仅首页（详情页/聚合页未打开）触发
+            if (document.querySelector('.overlay-page.open')) return;
+            // 命中可跳转区域则不触发
+            if (e.target.closest && e.target.closest('.hot-item, .tabs span, .burst-btn, .back-btn')) return;
+            spawnFirework(e.clientX, e.clientY);
+        });
+    })();
+    </script>
+</body>
+</html>

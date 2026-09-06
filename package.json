@@ -1,0 +1,13 @@
+{
+  "name": "huizhou-hotsearch",
+  "version": "1.0.0",
+  "private": true,
+  "description": "惠院热搜 —— 前端 + 后端 完整系统",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}
