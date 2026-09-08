@@ -84,9 +84,9 @@ function seedIfEmpty() {
     'INSERT INTO items (id, cat, title, tuan, mark, badge, badgeColor, views, label, labelColor, extra, link, detail, sort_order) ' +
     'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
   );
-  SEED_ITEMS.forEach(function (it) {
+  SEED_ITEMS.forEach(function (it, idx) {
     ins.run(it.id, it.cat, it.title, it.to ? 1 : 0, it.mark || '', it.badge || '', it.badgeColor || '',
-      it.views || '', it.label || '', it.labelColor || '', it.extra || '', it.link || '', it.detail || '', it.id);
+      it.views || '', it.label || '', it.labelColor || '', it.extra || '', it.link || '', it.detail || '', idx);
   });
   console.log('已导入 ' + SEED_ITEMS.length + ' 条热搜到数据库');
 }
