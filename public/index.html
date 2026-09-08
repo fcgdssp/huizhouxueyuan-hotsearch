@@ -656,12 +656,12 @@
 
         function renderList() {
             var items = HOT_ITEMS.filter(function (i) { return i.cat === activeCat; });
-            listEl.innerHTML = items.map(itemHTML).join('');
+            listEl.innerHTML = items.map(itemHTML).join('') + '<div style="text-align:center;padding:20px 0;color:#999;font-size:13px;">更多热搜，请关注计科院团委办公室</div>';
         }
 
         function renderBurstList() {
             var items = HOT_ITEMS.filter(function (i) { return i.to === true; });
-            burstList.innerHTML = items.map(itemHTML).join('');
+            burstList.innerHTML = items.map(itemHTML).join('') + '<div style="text-align:center;padding:20px 0;color:#999;font-size:13px;">更多热搜，请关注计科院团委办公室</div>';
         }
 
         function openDetail(id) {
@@ -1044,3 +1044,5 @@
     </script>
 </body>
 </html>
+
+
