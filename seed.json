@@ -1,5 +1,20 @@
 [
   {
+    "cat": "团办",
+    "title": "团委办公室咨询群二维码",
+    "to": true,
+    "mark": "",
+    "badge": "",
+    "badgeColor": "",
+    "views": "",
+    "label": "",
+    "labelColor": "",
+    "extra": "",
+    "link": "",
+    "detail": "<div style=\"text-align:center;\"><h3>团委办公室咨询群二维码</h3><p>扫描下方二维码加入咨询群</p><img src=\"/qrcode.jpg\" alt=\"团委办公室咨询群二维码\" style=\"max-width:300px;margin:20px auto;display:block;\"><p>或长按识别二维码</p></div>",
+    "id": 407
+  },
+  {
     "cat": "新生",
     "title": "计科院新生报到流程攻略",
     "to": false,
