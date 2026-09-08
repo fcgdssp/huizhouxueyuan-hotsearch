@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>惠院热搜</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* 外部留白干净 */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+            background: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 16px;
+        }
+
+        /* ===== 手机卡片 ===== */
+        .phone {
+            width: 100%;
+            max-width: 400px;
+            border-radius: 40px;
+            overflow: hidden;
+            padding: 20px 0 28px 0;
+            box-shadow: 0 24px 70px rgba(0, 0, 0, 0.12), 0 10px 24px rgba(0, 0, 0, 0.05);
+
+            /* ===== 卡片背景：浅色方格图案 + 柔和光晕 ===== */
+            background-color: #fcf9f5;
+            background-image:
+                /* 光晕（极淡） */
+                radial-gradient(circle at 15% 25%, rgba(255, 220, 200, 0.20) 0%, transparent 55%),
+                radial-gradient(circle at 85% 70%, rgba(200, 220, 255, 0.15) 0%, transparent 50%),
+                /* 方格图案（主要装饰） */
+                repeating-linear-gradient(0deg, transparent 0px, transparent 28px, rgba(200, 190, 180, 0.15) 28px, rgba(200, 190, 180, 0.15) 29px),
+                repeating-linear-gradient(90deg, transparent 0px, transparent 28px, rgba(200, 190, 180, 0.15) 28px, rgba(200, 190, 180, 0.15) 29px);
+            background-blend-mode: normal, normal, normal, normal;
+            background-size: 100% 100%, 100% 100%, 29px 29px, 29px 29px;
+        }
+
+        /* ===== 顶部栏（带装饰背景） ===== */
+        .top-bar {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 6px 22px 14px 22px;
+            margin: 0 0 8px 0;
+            border-bottom: 2px dashed rgba(180, 170, 160, 0.25);
+            position: relative;
+            background: transparent;
+        }
+        /* 顶部装饰背景：极淡的波纹或斜线 */
+        .top-bar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(45deg, 
+                transparent 0px, 
+                transparent 10px, 
+                rgba(200, 180, 170, 0.05) 10px, 
+                rgba(200, 180, 170, 0.05) 11px, 
+                transparent 11px, 
+                transparent 20px
+            );
+            pointer-events: none;
+            border-radius: 40px 40px 0 0;
+            z-index: 0;
+        }
+
+        .top-bar .left,
+        .top-bar .right {
+            font-size: 16px;
+            font-weight: 500;
+            color: #666;
+            z-index: 1;
+            padding: 0 4px;
+        }
+        .top-bar .left { margin-right: auto; }
+        .top-bar .right { margin-left: auto; }
+
+        .top-bar .center {
+            font-size: 28px;
+            font-weight: 800;
+            letter-spacing: 3px;
+            z-index: 1;
+            /* 特殊字效：描边 + 阴影 */
+            color: #4a3a2e;
+            text-shadow: 
+                2px 2px 0 rgba(255, 215, 175, 0.6),
+                4px 4px 8px rgba(0,0,0,0.08);
+            font-family: "Georgia", "Times New Roman", serif;
+            transform: scale(1.02);
+            padding: 0 16px;
+            position: relative;
+        }
+        /* 标题两侧装饰小星星 */
+        .top-bar .center::before {
+            content: '✦';
+            position: absolute;
+            left: -12px;
+            top: -2px;
+            font-size: 18px;
+            color: #c0a080;
+            opacity: 0.6;
+        }
+        .top-bar .center::after {
+            content: '✦';
+            position: absolute;
+            right: -12px;
+            top: -2px;
+            font-size: 18px;
+            color: #c0a080;
+            opacity: 0.6;
+        }
+
+        /* ===== 分类标签 ===== */
+        .tabs {
+            display: flex;
+            padding: 6px 22px 10px 22px;
+            gap: 18px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #777;
+            border-bottom: 1px solid rgba(180, 170, 160, 0.15);
+            flex-wrap: wrap;
+            background: transparent;
+            justify-content: center;
+        }
+        .tabs span {
+            cursor: default;
+            padding-bottom: 6px;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+            color: #777;
+        }
+        .tabs span.active {
+            color: #b85c3a;
+            border-bottom-color: #b85c3a;
+            font-weight: 600;
+        }
+
+        /* ===== 标语 ===== */
+        .slogan {
+            padding: 12px 22px 10px 22px;
+            font-size: 13px;
+            color: #aaa;
+            border-bottom: 1px solid rgba(180, 170, 160, 0.12);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: transparent;
+            justify-content: center;
+        }
+        .slogan .icon {
+            font-size: 15px;
+        }
+
+        /* ===== 热搜列表 ===== */
+        .hot-list {
+            padding: 6px 0 0 0;
+            background: transparent;
+        }
+
+        /* ===== 每条热搜（统一样式） ===== */
+        .hot-item {
+            display: flex;
+            align-items: stretch;
+            padding: 12px 18px 12px 16px;
+            margin: 0 14px 8px 14px;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            border: 1px solid rgba(220, 210, 200, 0.35);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+            transition: background 0.15s, transform 0.1s, box-shadow 0.2s;
+            /* 统一左侧装饰：灰色细竖条 */
+            border-left: 4px solid #cbc1b5;
+            border-radius: 16px 16px 16px 16px;
+        }
+        .hot-item:active {
+            background: rgba(255, 255, 255, 0.96);
+            transform: scale(0.98);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+        }
+
+        .hot-index {
+            font-size: 16px;
+            font-weight: 700;
+            color: #b0a69a;
+            width: 30px;
+            flex-shrink: 0;
+            padding-top: 2px;
+            text-align: left;
+        }
+        .hot-index.top3 {
+            color: #b85c3a; /* 前三名用暖色突出，但不刺眼 */
+        }
+
+        .hot-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            padding-left: 6px;
+        }
+
+        .hot-title {
+            font-size: 15px;
+            font-weight: 500;
+            color: #2a2a2a;
+            line-height: 1.4;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* 标签统一风格 */
+        .hot-title .badge {
+            font-size: 11px;
+            font-weight: 600;
+            padding: 0 10px;
+            border-radius: 30px;
+            line-height: 20px;
+            white-space: nowrap;
+            background: rgba(210, 195, 185, 0.25);
+            color: #8a7a6e;
+            border: 1px solid rgba(180, 165, 155, 0.15);
+        }
+        .hot-title .badge.orange {
+            background: rgba(235, 200, 170, 0.25);
+            color: #b87a4a;
+        }
+        .hot-title .badge.blue {
+            background: rgba(190, 210, 235, 0.30);
+            color: #4a6a8a;
+        }
+
+        .hot-meta {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 12px;
+            color: #b5aba0;
+            margin-top: 1px;
+        }
+        .hot-meta .label {
+            color: #b85c3a;
+            font-weight: 500;
+        }
+        .hot-meta .label.orange { color: #b87a4a; }
+        .hot-meta .label.blue { color: #4a6a8a; }
+        .hot-meta .views { color: #c5bbb0; }
+
+        .hot-extra {
+            flex-shrink: 0;
+            font-size: 12px;
+            color: #c5bbb0;
+            padding-top: 2px;
+            text-align: right;
+            margin-left: 6px;
+        }
+
+        .footer-placeholder {
+            height: 8px;
+        }
+
+        /* 响应式 */
+        @media (max-width: 420px) {
+            .top-bar .center {
+                font-size: 24px;
+                letter-spacing: 2px;
+            }
+            .tabs {
+                gap: 12px;
+                font-size: 13px;
+            }
+            .hot-item {
+                padding: 10px 14px 10px 12px;
+                margin: 0 8px 6px 8px;
+            }
+            .hot-title {
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="phone">
+        <!-- 顶部栏（带装饰） -->
+        <div class="top-bar">
+            <span class="left">听</span>
+            <span class="center">惠院热搜</span>
+            <span class="right">我的</span>
+        </div>
+
+        <!-- 分类标签 -->
+        <div class="tabs">
+            <span class="active">文娱</span>
+            <span>生活</span>
+            <span>社会</span>
+            <span>惠州</span>
+            <span>体育</span>
+        </div>
+
+        <!-- 标语 -->
+        <div class="slogan">
+            <span class="icon">📡</span> 热搜雷达，发现你关心的热点
+        </div>
+
+        <!-- 热搜列表 -->
+        <div class="hot-list">
+            <!-- 1 -->
+            <div class="hot-item">
+                <span class="hot-index top3">1</span>
+                <div class="hot-content">
+                    <div class="hot-title">
+                        特朗普怎么了好友正在看
+                        <span class="badge">热</span>
+                    </div>
+                    <div class="hot-meta"><span class="views">好友正在看</span></div>
+                </div>
+                <div class="hot-extra"></div>
+            </div>
+            <!-- 2 -->
+            <div class="hot-item">
+                <span class="hot-index top3">2</span>
+                <div class="hot-content">
+                    <div class="hot-title">
+                        狼队对战JDG
+                        <span class="badge orange">新</span>
+                    </div>
+                    <div class="hot-meta"><span class="views">248021</span></div>
+                </div>
+                <div class="hot-extra">新</div>
+            </div>
+            <!-- 3 -->
+            <div class="hot-item">
+                <span class="hot-index top3">3</span>
+                <div class="hot-content">
+                    <div class="hot-title">狼队离决赛仅一步之遥</div>
+                    <div class="hot-meta"><span class="views">49140</span></div>
+                </div>
+                <div class="hot-extra"></div>
+            </div>
+            <!-- 4 -->
+            <div class="hot-item">
+                <span class="hot-index">4</span>
+                <div class="hot-content">
+                    <div class="hot-title">
+                        上海宝亭超级学生价
+                        <span class="badge blue">官宣</span>
+                    </div>
+                    <div class="hot-meta"></div>
+                </div>
+                <div class="hot-extra">官宣</div>
+            </div>
+            <!-- 5 -->
+            <div class="hot-item">
+                <span class="hot-index">5</span>
+                <div class="hot-content">
+                    <div class="hot-title">狼队胜决先到赛点</div>
+                    <div class="hot-meta"><span class="views">58923</span></div>
+                </div>
+                <div class="hot-extra"></div>
+            </div>
+            <!-- 6 -->
+            <div class="hot-item">
+                <span class="hot-index">6</span>
+                <div class="hot-content">
+                    <div class="hot-title">狼队冲击进决赛</div>
+                    <div class="hot-meta"><span class="views">56569</span></div>
+                </div>
+                <div class="hot-extra"></div>
+            </div>
+            <!-- 7 -->
+            <div class="hot-item">
+                <span class="hot-index">7</span>
+                <div class="hot-content">
+                    <div class="hot-title">
+                        广东校服让家长省了5.8个亿
+                        <span class="badge orange">惠州</span>
+                    </div>
+                    <div class="hot-meta"><span class="label orange">惠州</span></div>
+                </div>
+                <div class="hot-extra"></div>
+            </div>
+            <!-- 8 -->
+            <div class="hot-item">
+                <span class="hot-index">8</span>
+                <div class="hot-content">
+                    <div class="hot-title">
+                        王安宇FILA品牌代言人
+                        <span class="badge blue">官宣</span>
+                    </div>
+                    <div class="hot-meta"><span class="label blue">官宣</span></div>
+                </div>
+                <div class="hot-extra"></div>
+            </div>
+            <!-- 9 -->
+            <div class="hot-item">
+                <span class="hot-index">9</span>
+                <div class="hot-content">
+                    <div class="hot-title">狼队与JDG争夺夏决名额</div>
+                    <div class="hot-meta"><span class="views">60491</span></div>
+                </div>
+                <div class="hot-extra"></div>
+            </div>
+            <!-- 10 -->
+            <div class="hot-item">
+                <span class="hot-index">10</span>
+                <div class="hot-content">
+                    <div class="hot-title">
+                        Lisa曝BLACKPINK时期曾隐藏恋爱
+                        <span class="badge">热</span>
+                    </div>
+                    <div class="hot-meta">
+                        <span class="label">热</span>
+                        <span class="views">15..</span>
+                    </div>
+                </div>
+                <div class="hot-extra">热</div>
+            </div>
+        </div>
+
+        <div class="footer-placeholder"></div>
+    </div>
+</body>
+</html>
