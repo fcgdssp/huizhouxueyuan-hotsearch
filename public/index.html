@@ -559,12 +559,17 @@
                 width: 100%;
                 height: 100vh;
                 border-radius: 0;
-                flex-direction: column;
                 padding: 0;
                 box-shadow: none;
+                display: grid;
+                grid-template-columns: 180px 1fr;
+                grid-template-rows: auto 1fr;
+                grid-template-areas:
+                    "header header"
+                    "sidebar content";
             }
             .top-bar {
-                flex-shrink: 0;
+                grid-area: header;
                 padding: 10px 28px;
                 border-bottom: 2px solid rgba(180, 170, 160, 0.15);
             }
@@ -572,19 +577,17 @@
                 font-size: 24px;
             }
             .sidebar {
+                grid-area: sidebar;
                 display: flex;
                 flex-direction: column;
-                flex-shrink: 0;
-                width: 180px;
                 padding: 16px 0 16px 16px;
                 border-right: 1px solid rgba(180, 170, 160, 0.15);
                 overflow-y: auto;
             }
             .content-area {
-                flex: 1;
+                grid-area: content;
                 display: flex;
                 flex-direction: column;
-                min-width: 0;
                 overflow: hidden;
             }
             .phone .tabs {
@@ -613,6 +616,8 @@
             }
             .hot-list {
                 padding: 12px 24px 28px 24px;
+                flex: 1;
+                overflow-y: auto;
             }
             .hot-item {
                 max-width: 600px;
