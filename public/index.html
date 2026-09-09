@@ -375,6 +375,62 @@
         .overlay-page.open {
             transform: translateX(0);
         }
+
+        /* ===== 群二维码浮层（从顶部下滑，不占满全屏） ===== */
+        .qr-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 20;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 60px 30px 30px;
+            background-color: #fcf9f5;
+            background-image:
+                radial-gradient(circle at 15% 25%, rgba(255, 220, 200, 0.20) 0%, transparent 55%),
+                radial-gradient(circle at 85% 70%, rgba(200, 220, 255, 0.15) 0%, transparent 50%);
+            transform: translateY(-100%);
+            transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.10);
+            border-radius: 0 0 24px 24px;
+        }
+        .qr-overlay.open {
+            transform: translateY(0);
+        }
+        .qr-overlay h3 {
+            font-size: 17px;
+            font-weight: 700;
+            color: #4a3a2e;
+            margin-bottom: 6px;
+        }
+        .qr-overlay p {
+            font-size: 13px;
+            color: #999;
+            margin-bottom: 16px;
+        }
+        .qr-overlay img {
+            max-width: 220px;
+            width: 100%;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            margin-bottom: 20px;
+        }
+        .qr-close-btn {
+            border: none;
+            background: rgba(200, 180, 170, 0.22);
+            color: #4a3a2e;
+            font-size: 14px;
+            font-weight: 600;
+            padding: 8px 28px;
+            border-radius: 999px;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .qr-close-btn:active {
+            background: rgba(200, 180, 170, 0.4);
+        }
         .overlay-header {
             display: flex;
             align-items: center;
@@ -548,6 +604,14 @@
             </div>
         </div>
 
+        <!-- 群二维码浮层（点「爆」从顶部下滑） -->
+        <div class="qr-overlay" id="qrOverlay">
+            <h3>团委办公室咨询群</h3>
+            <p>扫描下方二维码加入招新咨询群</p>
+            <img src="/qrcode.jpg" alt="团委办公室咨询群二维码" />
+            <button class="qr-close-btn" id="qrCloseBtn" type="button">关闭</button>
+        </div>
+
         <!-- 详情视图（点词条后从右侧滑入） -->
         <div class="overlay-page" id="detailPage">
             <div class="overlay-header">
@@ -597,6 +661,8 @@
         var burstPage = document.getElementById('burstPage');
         var burstList = document.getElementById('burstList');
         var burstBackBtn = document.getElementById('burstBackBtn');
+        var qrOverlay = document.getElementById('qrOverlay');
+        var qrCloseBtn = document.getElementById('qrCloseBtn');
         var detailPage = document.getElementById('detailPage');
         var detailTitle = document.getElementById('detailTitle');
         var detailBody = document.getElementById('detailBody');
@@ -684,9 +750,10 @@
         }
 
         function openBurst() {
-            renderBurstList();
-            burstPage.classList.add('open');
-            viewStack.push('burst');
+            qrOverlay.classList.add('open');
+        }
+        function closeQr() {
+            qrOverlay.classList.remove('open');
         }
 
         // 顶栏「爆」按钮：进入团办聚合页
@@ -727,6 +794,9 @@
             burstPage.classList.remove('open');
             if (viewStack.length) viewStack.pop();
         });
+
+        // 群二维码浮层关闭
+        qrCloseBtn.addEventListener('click', closeQr);
 
         // ===== 留言/反馈 =====
         var msgBtn = document.getElementById('msgBtn');
@@ -1034,8 +1104,8 @@
         }
 
         document.addEventListener('pointerdown', function (e) {
-            // 仅首页（详情页/聚合页未打开）触发
-            if (document.querySelector('.overlay-page.open')) return;
+            // 仅首页（详情页/聚合页/二维码浮层未打开）触发
+            if (document.querySelector('.overlay-page.open, .qr-overlay.open')) return;
             // 命中可跳转区域则不触发
             if (e.target.closest && e.target.closest('.hot-item, .tabs span, .burst-btn, .back-btn')) return;
             spawnFirework(e.clientX, e.clientY);
