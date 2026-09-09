@@ -350,7 +350,11 @@
         }
 
         .footer-placeholder {
-            display: none;
+            display: block;
+            padding: 16px 20px;
+            text-align: center;
+            color: #bbb;
+            font-size: 13px;
         }
 
         /* ===== 滑入视图通用（详情页 / 团办聚合页共用） ===== */
@@ -547,6 +551,145 @@
             z-index: 9999;
         }
 
+        /* ===== 桌面端：左导航 + 右内容 ===== */
+        @media (min-width: 768px) {
+            .phone {
+                max-width: none;
+                max-height: none;
+                width: 100%;
+                height: 100vh;
+                border-radius: 0;
+                flex-direction: column;
+                padding: 0;
+                box-shadow: none;
+            }
+            .top-bar {
+                flex-shrink: 0;
+                padding: 10px 28px;
+                border-bottom: 2px solid rgba(180, 170, 160, 0.15);
+            }
+            .top-bar .center {
+                font-size: 24px;
+            }
+            .sidebar {
+                display: flex;
+                flex-direction: column;
+                flex-shrink: 0;
+                width: 180px;
+                padding: 16px 0 16px 16px;
+                border-right: 1px solid rgba(180, 170, 160, 0.15);
+                overflow-y: auto;
+            }
+            .content-area {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                min-width: 0;
+                overflow: hidden;
+            }
+            .phone .tabs {
+                flex-direction: column;
+                gap: 0;
+                padding: 0;
+                border-bottom: none;
+                justify-content: flex-start;
+            }
+            .tabs span {
+                padding: 10px 12px;
+                border-bottom: none;
+                border-radius: 10px 0 0 10px;
+                font-size: 15px;
+            }
+            .tabs span.active {
+                background: rgba(184, 92, 58, 0.08);
+                border-bottom: none;
+                border-left: 3px solid #b85c3a;
+            }
+            .slogan {
+                border-bottom: none;
+                justify-content: flex-start;
+                padding: 12px 0 0 12px;
+                font-size: 12px;
+            }
+            .hot-list {
+                padding: 12px 24px 28px 24px;
+            }
+            .hot-item {
+                max-width: 600px;
+                padding: 14px 20px;
+            }
+            .footer-placeholder {
+                display: block;
+                padding: 16px 24px;
+                text-align: center;
+                color: #bbb;
+                font-size: 12px;
+                border-top: 1px solid rgba(180, 170, 160, 0.12);
+            }
+            .burst-list .hot-item {
+                max-width: 600px;
+            }
+        }
+
+        /* ===== 桌面端二维码弹窗（居中 modal） ===== */
+        .qr-modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.35);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+        }
+        .qr-modal-overlay.open {
+            display: flex;
+        }
+        .qr-modal-card {
+            background: #fff;
+            border-radius: 20px;
+            padding: 32px 28px 24px;
+            text-align: center;
+            box-shadow: 0 16px 50px rgba(0, 0, 0, 0.15);
+            max-width: 340px;
+            width: 90%;
+            animation: qrModalIn 0.25s ease;
+        }
+        @keyframes qrModalIn {
+            from { opacity: 0; transform: scale(0.92); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .qr-modal-card h3 {
+            font-size: 18px;
+            font-weight: 700;
+            color: #4a3a2e;
+            margin-bottom: 6px;
+        }
+        .qr-modal-card p {
+            font-size: 13px;
+            color: #999;
+            margin-bottom: 16px;
+        }
+        .qr-modal-card img {
+            max-width: 220px;
+            width: 100%;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            margin-bottom: 20px;
+        }
+        .qr-modal-close-btn {
+            border: none;
+            background: #b85c3a;
+            color: #fff;
+            font-size: 14px;
+            font-weight: 600;
+            padding: 9px 32px;
+            border-radius: 999px;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .qr-modal-close-btn:hover { background: #a34f31; }
+        .qr-modal-close-btn:active { opacity: 0.85; }
+
         /* 响应式 */
         @media (max-width: 420px) {
             .top-bar .center {
@@ -580,17 +723,19 @@
         </div>
 
         <!-- 分类标签（由 JS 渲染） -->
-        <div class="tabs" id="tabs"></div>
-
-        <!-- 标语 -->
-        <div class="slogan">
-            <span class="icon">📡</span> 热搜雷达，发现你关心的热点
+        <div class="sidebar">
+            <div class="tabs" id="tabs"></div>
+            <!-- 标语 -->
+            <div class="slogan">
+                <span class="icon">📡</span> 热搜雷达，发现你关心的热点
+            </div>
         </div>
 
-        <!-- 热搜列表（由 JS 渲染） -->
-        <div class="hot-list" id="hotList"></div>
-
-        <div class="footer-placeholder"></div>
+        <div class="content-area">
+            <!-- 热搜列表（由 JS 渲染） -->
+            <div class="hot-list" id="hotList"></div>
+            <div class="footer-placeholder">更多热搜，请关注计科院团委办公室</div>
+        </div>
 
         <!-- 团办聚合页（点顶部「爆」滑入，列出所有团办相关热搜） -->
         <div class="overlay-page" id="burstPage">
@@ -621,6 +766,16 @@
             </div>
             <div class="overlay-body">
                 <div class="detail-content" id="detailBody"></div>
+            </div>
+        </div>
+
+        <!-- 群二维码弹窗（桌面端点「爆」居中弹出） -->
+        <div class="qr-modal-overlay" id="qrModalOverlay">
+            <div class="qr-modal-card">
+                <h3>团委办公室咨询群</h3>
+                <p>扫描下方二维码加入招新咨询群</p>
+                <img src="/qrcode.jpg" alt="团委办公室咨询群二维码" />
+                <button class="qr-modal-close-btn" id="qrModalCloseBtn" type="button">关闭</button>
             </div>
         </div>
 
@@ -663,6 +818,8 @@
         var burstBackBtn = document.getElementById('burstBackBtn');
         var qrOverlay = document.getElementById('qrOverlay');
         var qrCloseBtn = document.getElementById('qrCloseBtn');
+        var qrModalOverlay = document.getElementById('qrModalOverlay');
+        var qrModalCloseBtn = document.getElementById('qrModalCloseBtn');
         var detailPage = document.getElementById('detailPage');
         var detailTitle = document.getElementById('detailTitle');
         var detailBody = document.getElementById('detailBody');
@@ -722,7 +879,7 @@
 
         function renderList() {
             var items = HOT_ITEMS.filter(function (i) { return i.cat === activeCat; });
-            listEl.innerHTML = items.map(itemHTML).join('') + '<div style="text-align:center;padding:20px 0;color:#999;font-size:13px;">更多热搜，请关注计科院团委办公室</div>';
+            listEl.innerHTML = items.map(itemHTML).join('');
         }
 
         function renderBurstList() {
@@ -750,10 +907,17 @@
         }
 
         function openBurst() {
-            qrOverlay.classList.add('open');
+            if (window.innerWidth >= 768) {
+                qrModalOverlay.classList.add('open');
+            } else {
+                qrOverlay.classList.add('open');
+            }
         }
         function closeQr() {
             qrOverlay.classList.remove('open');
+        }
+        function closeQrModal() {
+            qrModalOverlay.classList.remove('open');
         }
 
         // 顶栏「爆」按钮：进入团办聚合页
@@ -797,6 +961,10 @@
 
         // 群二维码浮层关闭
         qrCloseBtn.addEventListener('click', closeQr);
+        qrModalCloseBtn.addEventListener('click', closeQrModal);
+        qrModalOverlay.addEventListener('click', function (e) {
+            if (e.target === qrModalOverlay) closeQrModal();
+        });
 
         // ===== 留言/反馈 =====
         var msgBtn = document.getElementById('msgBtn');
@@ -1104,8 +1272,8 @@
         }
 
         document.addEventListener('pointerdown', function (e) {
-            // 仅首页（详情页/聚合页/二维码浮层未打开）触发
-            if (document.querySelector('.overlay-page.open, .qr-overlay.open')) return;
+            // 仅首页（详情页/聚合页/二维码浮层/弹窗未打开）触发
+            if (document.querySelector('.overlay-page.open, .qr-overlay.open, .qr-modal-overlay.open')) return;
             // 命中可跳转区域则不触发
             if (e.target.closest && e.target.closest('.hot-item, .tabs span, .burst-btn, .back-btn')) return;
             spawnFirework(e.clientX, e.clientY);
