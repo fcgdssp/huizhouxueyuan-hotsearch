@@ -373,5 +373,20 @@
     "link": "",
     "detail": "<p>&#x3000;&#x3000;烧烤、桌游、唱K、轰趴…… 团办人的团建只有你想不到，没有我们组不起来的局。加入团办，攻略我们做，快乐你只管收。</p><div style=\"text-align:center;margin:5px 0;\"><img src=\"/tuanjian1.jpg\" alt=\"团建活动1\" style=\"max-width:100%;margin:5px 0;border-radius:8px;\"><img src=\"/tuanjian2.jpg\" alt=\"团建活动2\" style=\"max-width:100%;margin:5px 0;border-radius:8px;\"><img src=\"/tuanjian3.jpg\" alt=\"团建活动3\" style=\"max-width:100%;margin:5px 0;border-radius:8px;\"></div>",
     "id": 413
+  },
+  {
+    "cat": "新生",
+    "title": "课余时间在干啥：别只会躺宿舍",
+    "to": false,
+    "mark": "",
+    "badge": "热",
+    "badgeColor": "",
+    "views": "168000",
+    "label": "",
+    "labelColor": "",
+    "extra": "",
+    "link": "",
+    "detail": "<p>&#x3000;&#x3000;有人在操场夜跑，有人在实验室调bug，有人去兼职赚奶茶钱…… 你的课余时间怎么过？评论区交出你的答案。</p><div style=\"text-align:center;margin:5px 0;\"><img src=\"/leisure1.jpg\" alt=\"课余生活1\" style=\"max-width:100%;margin:5px 0;border-radius:8px;\"><img src=\"/leisure2.jpg\" alt=\"课余生活2\" style=\"max-width:100%;margin:5px 0;border-radius:8px;\"></div>",
+    "id": 416
   }
 ]
