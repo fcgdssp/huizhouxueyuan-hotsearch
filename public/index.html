@@ -562,7 +562,7 @@
                 padding: 0;
                 box-shadow: none;
                 display: grid;
-                grid-template-columns: 180px 1fr;
+                grid-template-columns: 220px 1fr;
                 grid-template-rows: auto 1fr;
                 grid-template-areas:
                     "header header"
@@ -580,7 +580,7 @@
                 grid-area: sidebar;
                 display: flex;
                 flex-direction: column;
-                padding: 16px 0 16px 16px;
+                padding: 16px 0;
                 border-right: 1px solid rgba(180, 170, 160, 0.15);
                 overflow-y: auto;
             }
@@ -598,29 +598,35 @@
                 justify-content: flex-start;
             }
             .tabs span {
-                padding: 10px 12px;
+                padding: 12px 0;
                 border-bottom: none;
-                border-radius: 10px 0 0 10px;
+                border-radius: 0;
                 font-size: 15px;
+                text-align: center;
             }
             .tabs span.active {
-                background: rgba(184, 92, 58, 0.08);
+                background: rgba(184, 92, 58, 0.10);
                 border-bottom: none;
-                border-left: 3px solid #b85c3a;
+                font-weight: 700;
+                color: #b85c3a;
             }
             .slogan {
                 border-bottom: none;
-                justify-content: flex-start;
-                padding: 12px 0 0 12px;
+                justify-content: center;
+                padding: 12px 0 0;
                 font-size: 12px;
             }
             .hot-list {
                 padding: 12px 24px 28px 24px;
                 flex: 1;
                 overflow-y: auto;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
             }
             .hot-item {
-                max-width: 600px;
+                width: 100%;
+                max-width: 700px;
                 padding: 14px 20px;
             }
             .footer-placeholder {
@@ -632,7 +638,8 @@
                 border-top: 1px solid rgba(180, 170, 160, 0.12);
             }
             .burst-list .hot-item {
-                max-width: 600px;
+                width: 100%;
+                max-width: 700px;
             }
         }
 
