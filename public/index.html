@@ -859,6 +859,9 @@
         function esc(s) {
             return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
         }
+        function safeTitle(s) {
+            return String(s).replace(/&(?!#x3000;)/g, '&amp;').replace(/<(?!\/?wbr>)/g, '&lt;');
+        }
 
         function renderTabs() {
             tabsEl.innerHTML = CATEGORIES.map(function (c) {
@@ -895,7 +898,7 @@
             return '      <div class="hot-item" data-id="' + item.id + '">' +
                 '        <span class="hot-index' + top3 + '">' + idx + '</span>' +
                 '        <div class="hot-content">' +
-                '          <div class="hot-title">' + item.title + badge + '</div>' +
+                '          <div class="hot-title">' + safeTitle(item.title) + badge + '</div>' +
                 meta +
                 '        </div>' +
                 extra +
@@ -926,7 +929,7 @@
                 window.open(it.link, '_blank');
                 return;
             }
-            detailTitle.textContent = it.title;
+            detailTitle.innerHTML = safeTitle(it.title);
             detailBody.innerHTML = it.detail || '（详情正文待填写）';
             detailPage.classList.add('open');
             viewStack.push('detail');
