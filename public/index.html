@@ -717,6 +717,7 @@
 
         /* 响应式 */
         @media (max-width: 420px) {
+            .hot-title wbr { display: block; }
             .top-bar .center {
                 font-size: 24px;
                 letter-spacing: 2px;
@@ -894,7 +895,7 @@
             return '      <div class="hot-item" data-id="' + item.id + '">' +
                 '        <span class="hot-index' + top3 + '">' + idx + '</span>' +
                 '        <div class="hot-content">' +
-                '          <div class="hot-title">' + esc(item.title) + badge + '</div>' +
+                '          <div class="hot-title">' + item.title + badge + '</div>' +
                 meta +
                 '        </div>' +
                 extra +
